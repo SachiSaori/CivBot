@@ -17,6 +17,7 @@ partban = []
 
 @Bot.event
 async def on_ready():
+    await Bot.change_presence(game=discord.Game(name='Tip "!civ helps" for help'))
     print("Bot is online!")
 
 
