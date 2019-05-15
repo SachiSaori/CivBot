@@ -4,21 +4,24 @@ from discord.ext.commands import Bot
 import GameAlgs
 
 Bot = commands.Bot(command_prefix='!')
+Bot.remove_command('help')
+
 players = []
 playerslog = []  # для корректной работы
-civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон', 'Венеция', 'Византия',
-          'Германия', 'Голландия', 'Греция', 'Гунны', 'Дания', 'Египет', 'Зулусы', 'Индия', 'Индонезия', 'Инки',
-          'Ирокезы', 'Испания', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя', 'Марокко', 'Монголия', 'Персия',
+civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон', 'Византия',
+          'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия', 'Индонезия', 'Инки',
+          'Ирокезы', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя', 'Марокко', 'Монголия', 'Персия',
           'Полинезия', 'Польша', 'Португалия', 'Рим', 'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция', 'Швеция',
           'Шошоны', 'Эфиопия', 'Япония', ]
 part = []
 part.extend(civils)
 partban = []
+start = False
 
 
 @Bot.event
 async def on_ready():
-    await Bot.change_presence(activity=discord.Game(name='Введите !helps для вывода помощи по боту'))
+    await Bot.change_presence(activity=discord.Game(name='Введите !help для вывода помощи по боту'))
     print("Bot is online!")
 
 
@@ -38,7 +41,7 @@ async def reg(ctx):
             emb.set_footer(text="Простите, но вы уже в игре. :(")
         await ctx.send(embed=emb)
 
-
+'''
 @Bot.command(pass_context=True)
 async def autoban(ctx):
     if ctx.channel.id == 577856202352885790:
@@ -56,6 +59,7 @@ async def autoban(ctx):
         emb.add_field(name='Выбор из', value=part_str, inline=True)
         emb.set_footer(text='Для бана используйте команду !ban "1 нация" "2 нация" (без кавычек)')
         await ctx.send(embed=emb)
+'''
 
 
 @Bot.command(pass_context=True)
@@ -81,43 +85,50 @@ async def ban(ctx, civ1, civ2):
 
 
 @Bot.command(pass_context=True)
-async def start(ctx):
+async def random(ctx):
     if ctx.channel.id == 577856202352885790:
-        playersdictionary = GameAlgs.randomciv(players, part)
-        emb = discord.Embed(title='Игра началась!', color=0x00ff00)
-        for player in playersdictionary.keys():
-            emb.add_field(name='Игрок:', value=player, inline=False)
-            for civ in playersdictionary[player]:
-                emb.add_field(name='Нации:', value=civ, inline=True)
-        emb.set_footer(text='Старт успешен. После игры введите !clear для очистки сессии')
-        await ctx.send(embed=emb)
+        global start
+        if not start:
+            start = True
+            playersdictionary = GameAlgs.randomciv(players, part)
+            emb = discord.Embed(title='', color=0x00ff00)
+            for player in playersdictionary.keys():
+                civ_str = ""
+                for civ in playersdictionary[player]:
+                    civ_str += civ + " "
+                emb.add_field(name=player, value=civ_str, inline=True)
+                civ_str = ""
+            emb.set_footer(text='Старт успешен. После игры введите !clear для очистки сессии')
+            await ctx.send(embed=emb)
+        else:
+            await ctx.send('Пожалуйста, запустите !clear')
 
 
 @Bot.command(pass_context=True)
 async def clear(ctx):
     players.clear()
     playerslog.clear()  # для корректной работы
-    civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон', 'Венеция',
-                  'Византия',
-                  'Германия', 'Голландия', 'Греция', 'Гунны', 'Дания', 'Египет', 'Зулусы', 'Индия', 'Индонезия', 'Инки',
-                  'Ирокезы', 'Испания', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя', 'Марокко', 'Монголия', 'Персия',
-                  'Полинезия', 'Польша', 'Португалия', 'Рим', 'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция', 'Швеция',
-                  'Шошоны', 'Эфиопия', 'Япония', ]
+    civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
+              'Византия', 'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия',
+              'Индонезия', 'Инки','Ирокезы', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя',
+              'Марокко', 'Монголия', 'Персия', 'Полинезия', 'Польша', 'Португалия', 'Рим', 'Россия', 'Сиам',
+              'Сонгай', 'Турция', 'Франция', 'Швеция', 'Шошоны', 'Эфиопия', 'Япония', ]
     part.clear()
+    part.extend(civils)
     partban.clear()
     await ctx.send('Очистка прошла успешно')
 
 
 @Bot.command(pass_context=True)
-async def helps(ctx):
+async def help(ctx):
     emb = discord.Embed(title='Commands', color=0x00ffff)
-    emb.add_field(name='!helps', value='Выводит команды бота!', inline=False)
-    emb.add_field(name='!reg', value='Регистрирует вас в игру!', inline=False)
+    emb.add_field(name='!help', value='Выводит команды бота!', inline=False)
+    emb.add_field(name='!reg', value='Регистрирует участника!', inline=False)
     emb.add_field(name='!autoban', value='автоматический бан трёх наций!', inline=False)
-    emb.add_field(name='!ban', value='Участник банит одну из наций!', inline=False)
-    emb.add_field(name='!start', value='Начинает игру и выдаёт каждому из участников три нации для выбора', inline=False)
-    emb.add_field(name='!clear', value='Начинает процедуру очистки сессии. ВАЖНО, ИСПОЛЬЗУЙТЕ ЕЁ ПОСЛЕ КАЖДОЙ ИГРЫ!!!!', inline=False)
-    emb.set_footer(text='Спасибо за использование наших услуг! Мы вам очень рады! :3')
+    emb.add_field(name='!ban', value='Участник банит две наций! (без запятой, через пробел)', inline=False)
+    emb.add_field(name='!random', value='Выдаёт каждому участнику три нации', inline=False)
+    emb.add_field(name='!clear', value='Очищает рандомайзер. Обязательно после каждой игры ли перед каждой игрой!!!!', inline=False)
+    emb.set_footer(text='Спасибо, что воспользовались нашим ботом! :3')
     await ctx.send(embed=emb)
 
 Bot.run("NTc2NDA3NjA2ODU2MjUzNDQw.XNcf-w.jUeX-gFLqX_6UrVlw0r_2-J_LoQ")
