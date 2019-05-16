@@ -122,13 +122,12 @@ async def clear(ctx):
 @Bot.command(pass_context=True)
 async def help(ctx):
     emb = discord.Embed(title='Commands', color=0x00ffff)
-    emb.add_field(name='!help', value='Выводит команды бота!', inline=False)
+    emb.add_field(name='!help', value='Выводит список команд бота!', inline=False)
     emb.add_field(name='!reg', value='Регистрирует участника!', inline=False)
-    emb.add_field(name='!autoban', value='автоматический бан трёх наций!', inline=False)
-    emb.add_field(name='!ban', value='Участник банит две наций! (без запятой, через пробел)', inline=False)
-    emb.add_field(name='!random', value='Выдаёт каждому участнику три нации', inline=False)
-    emb.add_field(name='!clear', value='Очищает рандомайзер. Обязательно после каждой игры ли перед каждой игрой!!!!', inline=False)
-    emb.set_footer(text='Спасибо, что воспользовались нашим ботом! :3')
+    emb.add_field(name='!ban "Нация 1" "Нация 2"', value='Исключает две нации из выборки (без запятой, через пробел)', inline=False)
+    emb.add_field(name='!random', value='Случайным образом выбирает каждому участнику три нации', inline=False)
+    emb.add_field(name='!clear', value='Очищает рандомайзер. Обязательно выполнять после каждого применения бота (или перед каждым)', inline=False)
+    emb.set_footer(text='Уже исключены Гунны, Венеция, Испания. \n Спасибо, что воспользовались нашим ботом! :3')
     await ctx.send(embed=emb)
 
 Bot.run("NTc2NDA3NjA2ODU2MjUzNDQw.XNcf-w.jUeX-gFLqX_6UrVlw0r_2-J_LoQ")
