@@ -108,6 +108,7 @@ async def random(ctx):
 async def clear(ctx):
     players.clear()
     playerslog.clear()  # для корректной работы
+    global civils
     civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
               'Византия', 'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия',
               'Индонезия', 'Инки','Ирокезы', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя',
@@ -116,6 +117,8 @@ async def clear(ctx):
     part.clear()
     part.extend(civils)
     partban.clear()
+    global start
+    start = False
     await ctx.send('Очистка прошла успешно')
 
 
