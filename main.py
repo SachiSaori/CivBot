@@ -16,6 +16,7 @@ civils = ['Австрия', 'Америка', 'Англия', 'Аравия', '�
 part = []
 part.extend(civils)
 partban = []
+banned = []
 start = False
 
 
@@ -72,11 +73,19 @@ async def ban(ctx, civ1, civ2):
                 partban.remove(ctx.message.author)
                 emb = discord.Embed(title='Бан!', color=0x00ffff)
                 emb.add_field(name="Название", value=civ1+' '+civ2, inline=False)
-                emb.set_footer(text='Данные цивилизации была забанены. Вы можете забанить максимум 2 нации!')
+                banned.append(civ1)
+                banned.append(civ2)
+                banned_str = ""
+                for ban in banned:
+                    banned_str += ban + " "
+                emb.set_footer(text='Уже забанены:' + banned_str,)
             else:
                 emb = discord.Embed(title='Ошибка!', color=0xff0000)
                 emb.add_field(name='Ошибка значений', value=ctx.message.content+' не в списке')
-                emb.set_footer(text='Одной из нации нету в списке. Попробуйте ещё раз!')
+                banned_str = ""
+                for ban in banned:
+                    banned_str += ban + " "
+                emb.set_footer(text='Уже забанены: ' + banned_str)
         else:
             emb = discord.Embed(title='Ошибка!', color=0xff0000)
             emb.add_field(name='Ошибка значений', value=ctx.message.author.name + ' не в списке')
@@ -119,6 +128,7 @@ async def clear(ctx):
     partban.clear()
     global start
     start = False
+    banned.clear()
     await ctx.send('Очистка прошла успешно')
 
 
