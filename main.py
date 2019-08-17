@@ -61,7 +61,7 @@ async def random(ctx):
             'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция', 'Швеция', 'Шошоны', 'Эфиопия',
             'Япония']
         settings.part.clear()
-        settings.part.extend(civils)
+        settings.part.extend(settings.civils)
         settings.partban.clear()
         settings.banned.clear()
         await ctx.send(embed=emb)
