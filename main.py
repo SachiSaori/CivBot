@@ -15,7 +15,7 @@ async def on_ready():
     print("Bot is online!")
 
 
-@Bot.event
+@Bot.command(pass_context = True)
 async def reg(ctx, civ1, civ2):
     if ctx.channel.id == 577856202352885790:
         if (civ1.capitalize() in settings.part) and (civ2.capitalize() in settings.part):
