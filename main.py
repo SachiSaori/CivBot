@@ -2,21 +2,12 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 import GameAlgs
+import settings
+
+
 
 Bot = commands.Bot(command_prefix='!')
 Bot.remove_command('help')
-
-players = []
-playerslog = []  # для корректной работы
-civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон', 'Византия',
-          'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия', 'Индонезия', 'Инки',
-          'Ирокезы', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя', 'Марокко', 'Монголия', 'Персия',
-          'Полинезия', 'Польша', 'Португалия', 'Рим', 'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция', 'Швеция',
-          'Шошоны', 'Эфиопия', 'Япония', ]
-part = []
-part.extend(civils)
-partban = []
-banned = []
 
 @Bot.event
 async def on_ready():
@@ -24,44 +15,25 @@ async def on_ready():
     print("Bot is online!")
 
 
-@Bot.command(pass_context=True)
-async def reg(ctx):
+@Bot.event
+async def reg(ctx, civ1, civ2):
     if ctx.channel.id == 577856202352885790:
-        if ctx.message.author not in playerslog:
-            players.append(ctx.message.author.name)
-            playerslog.append(ctx.message.author)  # playerlog здесь чисто для того, чтобы всё работало корректно
-            partban.extend(playerslog*2)
-            emb = discord.Embed(title=ctx.message.author.name+' Зарегистрирован', color=0x00ff00)
-            emb.set_footer(text=" ")
-        else:
-            emb = discord.Embed(title="Ошибка!", color=0xff0000)
-            emb.add_field(name="Имя:", value=ctx.message.author.name, inline=True)
-            emb.set_footer(text="Простите, но вы уже в игре. :(")
-        await ctx.send(embed=emb)
-
-
-@Bot.command(pass_context=True)
-async def ban(ctx, civ1, civ2):
-    if ctx.channel.id == 577856202352885790:
-        if ctx.message.author in partban:
-            if (civ1.capitalize() in part) and (civ2.capitalize() in part):
-                part.remove(civ1.capitalize())
-                part.remove(civ2.capitalize())
-                partban.remove(ctx.message.author)
-                emb = discord.Embed(title=civ1+' '+civ2+' Исключены из выборки', color=0x00ffff)
-                banned.append(civ1)
-                banned.append(civ2)
+        if (civ1.capitalize() in settings.part) and (civ2.capitalize() in settings.part):
+            if ctx.message.author.name not in settings.players:
+                settings.players.append(ctx.message.author.name)
+                settings.part.remove(civ1.capitalize())
+                settings.part.remove(civ2.capitalize())
+                emb = discord.Embed(title=ctx.message.author.name+', добро пожаловать в игру! '+civ1.capitalize()+' '+civ2.capitalize()+' Исключены из выборки', color=0x00ffff)
+                settings.banned.append(civ1)
+                settings.banned.append(civ2)
                 banned_str = ""
-                for ban in banned:
+                for ban in settings.banned:
                     banned_str += ban + " "
-                emb.set_footer(text='Уже забанены:' + banned_str,)
+                emb.set_footer(text='Уже забанены: ' + banned_str.capitalize())
             else:
-                emb = discord.Embed(title='Ошибка!', color=0xff0000)
-                emb.add_field(name=civ1+" "+civ2, value="Уже забанены")
-                banned_str = ""
-                for ban in banned:
-                    banned_str += ban + " "
-                emb.set_footer(text='Уже забанены: ' + banned_str)
+                emb = discord.Embed(title="Ошибка!", color=0xff0000)
+                emb.add_field(name="Имя:", value=ctx.message.author.name, inline=True)
+                emb.set_footer(text="Простите, но вы уже в игре. :(")
         else:
             emb = discord.Embed(title='Ошибка!', color=0xff0000)
             emb.add_field(name=ctx.message.author.name, value='Вы уже банили')
@@ -72,7 +44,7 @@ async def ban(ctx, civ1, civ2):
 @Bot.command(pass_context=True)
 async def random(ctx):
     if ctx.channel.id == 577856202352885790:
-        playersdictionary = GameAlgs.randomciv(players, part)
+        playersdictionary = GameAlgs.randomciv(settings.players, settings.part)
         emb = discord.Embed(title='', color=0x00ff00)
         for player in playersdictionary.keys():
             civ_str = ""
@@ -81,18 +53,17 @@ async def random(ctx):
             emb.add_field(name=player, value=civ_str, inline=True)
             civ_str = ""
         emb.set_footer(text='Старт успешен.')
-        players.clear()
-        playerslog.clear()  # для корректной работы
-        global civils
-        civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
-                  'Византия', 'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия',
-                  'Индонезия', 'Инки','Ирокезы', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя',
-                  'Марокко', 'Монголия', 'Персия', 'Полинезия', 'Польша', 'Португалия', 'Рим', 'Россия', 'Сиам',
-                  'Сонгай', 'Турция', 'Франция', 'Швеция', 'Шошоны', 'Эфиопия', 'Япония']
-        part.clear()
-        part.extend(civils)
-        partban.clear()
-        banned.clear()
+        settings.players.clear()
+        settings.civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
+            'Византия', 'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия',
+            'Индонезия', 'Инки', 'Ирокезы', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя',
+            'Марокко', 'Монголия', 'Персия', 'Полинезия', 'Польша', 'Португалия', 'Рим',
+            'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция', 'Швеция', 'Шошоны', 'Эфиопия',
+            'Япония']
+        settings.part.clear()
+        settings.part.extend(civils)
+        settings.partban.clear()
+        settings.banned.clear()
         await ctx.send(embed=emb)
 
 @Bot.command(pass_context=True)
