@@ -70,8 +70,7 @@ async def random(ctx):
 async def help(ctx):
     if ctx.channel.id == 577856202352885790:
         emb = discord.Embed(title='Commands', color=0x00ffff)
-        emb.add_field(name='!reg', value='Регистрирует участника.', inline=False)
-        emb.add_field(name='!ban Нация 1 Нация 2', value='Исключает две нации из выборки (без запятой, через пробел)', inline=False)
+        emb.add_field(name='!reg Нация1 Нация2', value='Регистрирует участника и банит две нации из выборки.', inline=False)
         emb.add_field(name='!random', value='Случайным образом выбирает каждому участнику три нации', inline=False)
         emb.set_footer(text='Уже исключены Гунны, Венеция, Испания.')
         await ctx.send(embed=emb)
