@@ -36,7 +36,7 @@ async def reg(ctx, civ1, civ2):
                 emb.set_footer(text="Простите, но вы уже в игре. :(")
         else:
             emb = discord.Embed(title='Ошибка!', color=0xff0000)
-            emb.add_field(name=ctx.message.author.name, value='Вы уже банили')
+            emb.add_field(name=civ1+" "+civ2, value='Этих наций нет в списке')
             emb.set_footer(text=' ')
         await ctx.send(embed=emb)
 
