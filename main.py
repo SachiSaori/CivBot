@@ -16,7 +16,7 @@ async def on_ready():
 
 
 @Bot.command(pass_context = True)
-async def reg(ctx, civ1, civ2):
+async def ban(ctx, civ1, civ2):
     if ctx.channel.id == 577856202352885790:
         if (civ1.capitalize() in settings.part) and (civ2.capitalize() in settings.part):
             if ctx.message.author.name not in settings.players:
@@ -70,7 +70,7 @@ async def random(ctx):
 async def help(ctx):
     if ctx.channel.id == 577856202352885790:
         emb = discord.Embed(title='Commands', color=0x00ffff)
-        emb.add_field(name='!reg Нация1 Нация2', value='Регистрирует участника и банит две нации из выборки.', inline=False)
+        emb.add_field(name='!ban Нация1 Нация2', value='Регистрирует участника и банит две нации из выборки.', inline=False)
         emb.add_field(name='!random', value='Случайным образом выбирает каждому участнику три нации', inline=False)
         emb.set_footer(text='Уже исключены Гунны, Венеция, Испания.')
         await ctx.send(embed=emb)
