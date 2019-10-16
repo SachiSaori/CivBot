@@ -1,9 +1,10 @@
 import mysql.connector
 
-dbconfig = { 'host': 'eu-cdbr-west-02.cleardb.net',
-             'user': 'bca611917ce10f',
-             'password': '6f307489',
-             'database': 'heroku_4e4d24d83d2a5ae', }
+dbconfig = {'host': 'eu-cdbr-west-02.cleardb.net',
+            'user': 'bca611917ce10f',
+            'password': '6f307489',
+            'database': 'heroku_4e4d24d83d2a5ae'}
+
 
 def add_user(name, id):
     answer = ""
@@ -22,3 +23,11 @@ def add_user(name, id):
     cur.close()
     conn.close()
     return answer
+
+
+def registration(id, match_id):
+    conn = mysql.connector.connect(**dbconfig)
+    cur = conn.cursor()
+    _SQL = f''
+    cur.close()
+    conn.close()
