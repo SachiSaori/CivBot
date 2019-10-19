@@ -5,9 +5,9 @@ import GameAlgs
 import settings
 
 
-
 Bot = commands.Bot(command_prefix='!')
 Bot.remove_command('help')
+
 
 @Bot.event
 async def on_ready():
@@ -15,7 +15,7 @@ async def on_ready():
     print("Bot is online!")
 
 
-@Bot.command(pass_context = True)
+@Bot.command(pass_context=True)
 async def ban(ctx, civ1, civ2):
     if ctx.channel.id == 577856202352885790:
         if (civ1.capitalize() in settings.part) and (civ2.capitalize() in settings.part):
@@ -54,17 +54,21 @@ async def random(ctx):
             civ_str = ""
         emb.set_footer(text='Старт успешен.')
         settings.players.clear()
-        settings.civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
-            'Византия', 'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия',
-            'Индонезия', 'Инки', 'Ирокезы', 'Карфаген', 'Кельты', 'Китай', 'Корея', 'Майя',
-            'Марокко', 'Монголия', 'Персия', 'Полинезия', 'Польша', 'Португалия', 'Рим',
-            'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция', 'Швеция', 'Шошоны', 'Эфиопия',
-            'Япония']
+        settings.civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия',
+                           'Ацтеки', 'Бразилия', 'Вавилон',
+                           'Византия', 'Германия', 'Голландия', 'Греция',
+                           'Дания', 'Египет', 'Зулусы', 'Индия', 'Индонезия',
+                           'Инки', 'Ирокезы', 'Карфаген', 'Кельты', 'Китай',
+                           'Корея', 'Майя', 'Марокко', 'Монголия', 'Персия',
+                           'Полинезия', 'Польша', 'Португалия', 'Рим',
+                           'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция',
+                           'Швеция', 'Шошоны', 'Эфиопия', 'Япония']
         settings.part.clear()
         settings.part.extend(settings.civils)
         settings.partban.clear()
         settings.banned.clear()
         await ctx.send(embed=emb)
+
 
 @Bot.command(pass_context=True)
 async def help(ctx):
