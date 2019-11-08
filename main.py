@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ext.commands import Bot
 import GameAlgs
 import settings
+import MySQLDB
 
 
 Bot = commands.Bot(command_prefix='!')
@@ -16,7 +17,7 @@ async def on_ready():
 
 
 @Bot.command(pass_context=True)
-async def ban(ctx, civ1, civ2):
+async def ban(ctx, match_id, civ1, civ2):
     if ctx.channel.id == 577856202352885790:
         if (civ1.capitalize() in settings.part) and (civ2.capitalize() in settings.part):
             if ctx.message.author.name not in settings.players:
