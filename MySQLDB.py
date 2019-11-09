@@ -15,18 +15,18 @@ def add_user(name, id):
     cur.execute(_SQL)
     res = cur.fetchall()
     if len(res) > 0:
-        answer = "user already exist!"
+        answer = False
     else:
         _SQL = f'INSERT INTO users(name, id) VALUES("{str(name)}", {str(id)});'
         cur.execute(_SQL)
         conn.commit()
-        answer = "user added!"
+        answer = True
     cur.close()
     conn.close()
     return answer
 
 
-def registration(id, match_id):
+def registration(id, match_id, civ1, civ2):
     """
     Регистрирует участника в матч
     """
@@ -46,17 +46,31 @@ def registration(id, match_id):
         _SQL = f'SELECT start FROM match_status WHERE match_id = {str(match_id)}'
         cur.execute(_SQL)
         res = cur.fetchone()
-        if res[0] == 1:
-            cur.close()
-            conn.close()
-            return True, True, False #Пользователь не в игре, НО регистрация на текущий матч закрыта
-        else:
-            _SQL = f'INSERT INTO status (match_id, user_id) VALUES ({str(match_id)}, {str(id)})'
+        try:
+            if res[0] == 1:
+                cur.close()
+                conn.close()
+                return True, True, False #Пользователь не в игре, НО регистрация на текущий матч закрыта
+            else:
+                _SQL = f'INSERT INTO status(match_id, user_id) VALUES({str(match_id)}, {str(id)})'
+                cur.execute(_SQL)
+                _SQL = f'INSERT INTO banned(user_id, ban1, ban2) VALUES({str(id)}, "{str(civ1)}", "{str(civ2)}")'
+                cur.execute(_SQL)
+                conn.commit()
+                cur.close()
+                conn.close()
+                return True, True, True #Пользователь присоединился к этой игре
+        except TypeError:
+            _SQL = f'INSERT INTO match_status(match_id) VALUES({str(match_id)})'
+            cur.execute(_SQL)
+            _SQL = f'INSERT INTO status(match_id, user_id) VALUES({str(match_id)}, {str(id)})'
+            cur.execute(_SQL)
+            _SQL = f'INSERT INTO banned(user_id, ban1, ban2) VALUES({str(id)}, "{str(civ1)}", "{str(civ2)}")'
             cur.execute(_SQL)
             conn.commit()
             cur.close()
             conn.close()
-            return True, True, True #Пользователь присоединился к этой игре
+            return True, True, True #Пользователь создал новую игру.
     else:
         return True, False, False #В базе данных, но находится в игре.
 
@@ -69,29 +83,36 @@ def leave(id):
     if len(res) == 0:
         cur.close()
         conn.close()
-        return False, False #Нет в БД
-    _SQL = f'SELECT * FROM status WHERE user_id = {str(id)}' #Получаем информацию о нахождении в игре
-    cur.execute(_SQL)
-    res = cur.fetchall()
-    _SQL = f'SELECT match_id FROM status WHERE user_id = {str(id)}'
-    cur.execute(_SQL)
-    match_id = cur.fetchone()
-    if len(res) != 0:
+        return False, False, False #Нет в БД
+    try:
+        _SQL = f'SELECT match_id FROM status WHERE user_id = {str(id)}'
+        cur.execute(_SQL)
+        match_id = cur.fetchone()
         _SQL = f'SELECT start FROM match_status WHERE match_id = {str(match_id[0])}'
         cur.execute(_SQL)
         res2 = cur.fetchone()
-        if res2[0] == 1:
-            return True, True, False  #Матч уже начался
-        else:
-            _SQL = f'DELETE FROM status WHERE user_id = {str(id)}'
-            cur.execute(_SQL)
-            conn.commit()
-            cur.close()
-            conn.close()
-            return True, True, True #Вышел из матча
+    except TypeError:
+        return True, False, False
+    if res2[0] == 1:
+        return True, True, False  #Матч уже начался
     else:
-        return True, False, False #Не находится в матче
+        _SQL = f'DELETE FROM status WHERE user_id = {str(id)}'
+        cur.execute(_SQL)
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True, True, True #Вышел из матча
 
+
+def unbanned(id):
+    conn = mysql.connector.connect(**dbconfig)
+    cur = conn.cursor()
+    _SQL = f'SELECT ban1, ban2 FROM banned WHERE user_id={str(id)}'
+    cur.execute(_SQL)
+    _SQL = f'DELETE FROM banned WHERE user_id={str(id)}'
+    cur.execute(_SQL)
+    banned_civs = cur.fetchone()
+    return banned_civs[0], banned_civs[1]
 
 
 def host_rand(players):
@@ -108,7 +129,7 @@ def host_rand(players):
         points = cur.fetchone()
         sum += points[0]
     avg = sum/len(players)
-    _SQL = f'UPDATE match_status SET average_points={str(avg)}'
+    _SQL = f'UPDATE match_status SET average_points={str(avg)} WHERE match_id={str(res[0])}'
     cur.execute(_SQL)
     conn.commit()
     _SQL = f'UPDATE match_status SET host_id={str(players[host_index])} WHERE match_id={str(res[0])}'
