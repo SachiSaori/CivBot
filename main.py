@@ -26,6 +26,19 @@ async def auth(ctx):
 
 
 @Bot.command(pass_context=True)
+async def stat(ctx):
+    emb = discord.Embed(title="Статистика", color=0x00ffff)
+    database_data = MySQLDB.statistic(ctx.message.author.id)
+    emb.set_author(name=ctx.message.author.name, icon_url=ctx.message.author.avatar_url)
+    emb.add_field(name="Всего игр: ", value=database_data[2], inline=True)
+    emb.add_field(name="Поражений: ", value=database_data[6], inline=False)
+    emb.add_field(name="Побед: ", value=database_data[3], inline=False)
+    emb.add_field(name="Выжил: ", value=database_data[4], inline=False)
+    emb.set_footer(text=f"Rank Points: {str(database_data[5])}")
+    await ctx.send(embed=emb)
+
+
+@Bot.command(pass_context=True)
 async def ban(ctx, match_id, civ1, civ2):
     if (civ1.capitalize() in settings.part) and (civ2.capitalize() in settings.part):
         if ctx.message.author.name not in settings.players:
