@@ -1,12 +1,6 @@
 import random
 
 
-def autoban(civils):
-    for i in range(3):
-        civils.pop(random.randint(0, len(civils)))
-    return civils
-
-
 def randomciv(players, part):
     pldic = {}
     pllist = []
