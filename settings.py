@@ -1,10 +1,3 @@
-class User:
-    naming: str
-    last_game: str
-    games_num: int
-    wins: int
-
-
 players = []
 playerslog = []  # для корректной работы
 civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
@@ -17,4 +10,4 @@ part = []
 part.extend(civils)
 partban = []
 banned = []
-statlist = []
+users_id = []
