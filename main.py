@@ -200,4 +200,8 @@ async def help(ctx):
     emb.set_footer(text='Уже исключены Гунны, Венеция, Испания.')
     await ctx.send(embed=emb)
 
+<<<<<<< HEAD
 Bot.run("NTc2NDA3NjA2ODU2MjUzNDQw.XgN3fw.6bsxVHrWMhdsXOlwS-GqQQX8yC0")
+=======
+Bot.run("NjQyNDQ0MzY4NTgxNzU0ODgw.XcgM1g._GCxIGgZjd3Ep4hBdAtngThamlE")
+>>>>>>> de76fde7cd8ad75defd5aa0d64af5e36f2246359
