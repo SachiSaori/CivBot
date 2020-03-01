@@ -1,10 +1,9 @@
-# -*- coding: cp1251 -*-
-
 import discord
 from discord.ext import commands
 from discord.ext.commands import Bot
 import GameAlgs
 import settings
+import Mongocon
 
 
 Bot = commands.Bot(command_prefix='!')
@@ -13,45 +12,64 @@ Bot.remove_command('help')
 
 @Bot.event
 async def on_ready():
-    await Bot.change_presence(activity=discord.Game(name='Введите !help для вывода помощи по боту'))
+    await Bot.change_presence(activity=discord.Game(name='Р’РІРµРґРёС‚Рµ !help РґР»СЏ РІС‹РІРѕРґР° РїРѕРјРѕС‰Рё РїРѕ Р±РѕС‚Сѓ'))
     print("Bot is online!")
 
 
 @Bot.command(pass_context=True)
-async def ban(ctx, civ1, civ2):
+async def ban(ctx, match_id, civ1, civ2):
+    user = Mongocon.User(ctx.message.author.id, ctx.message.author.name, ctx.message.author.avatar)
+    match = Mongocon.Match(match_id)
     if (civ1.capitalize() in settings.part) and (
             civ2.capitalize() in settings.part):
         if ctx.message.author.name not in settings.players:
-            settings.players.append(ctx.message.author.name)
-            settings.users_id.append(ctx.message.author.id)
-            settings.part.remove(civ1.capitalize())
-            settings.part.remove(civ2.capitalize())
-            emb = discord.Embed(
-                title=ctx.message.author.name +
-                ', добро пожаловать в игру! ' +
-                civ1.capitalize() +
-                ' ' +
-                civ2.capitalize() +
-                ' Исключены из выборки',
-                color=0x00ffff)
-            settings.banned.append(civ1)
-            settings.banned.append(civ2)
-            banned_str = ""
-            for ban in settings.banned:
-                banned_str += ban + " "
-            emb.set_footer(
-                text='Уже забанены: ' +
-                banned_str.capitalize())
+            db_ans = Mongocon.join(user, match, match_id)
+            if db_ans == "Р’ РёРіСЂРµ!":
+                emb = discord.Embed(title="РћС€РёР±РєР°!", color=0xff0000)
+                emb.add_field(
+                    name="РРјСЏ:",
+                    value=ctx.message.author.name,
+                    inline=True)
+                emb.set_footer(text="РџСЂРѕСЃС‚РёС‚Рµ, РЅРѕ РІС‹ СѓР¶Рµ РІ РёРіСЂРµ РёР»Рё РІР°С€ С…РѕСЃС‚ РЅРµ РїСЂРµРґРѕСЃС‚Р°РІРёР» СЃС‚Р°С‚РёСЃС‚РёРєСѓ")
+            else:
+                if db_ans == "РњР°С‚С‡ СѓР¶Рµ РёРґС‘С‚!":
+                    emb = discord.Embed(title="РћС€РёР±РєР°!", color=0xff0000)
+                    emb.add_field(
+                        name="id:",
+                        value=match_id,
+                        inline=True)
+                    emb.set_footer(text="РњР°С‚С‡ СЃ СЌС‚РёРј id СѓР¶Рµ РµСЃС‚СЊ.")
+                else:
+                    settings.players.append(ctx.message.author.name)
+                    settings.users_id.append(ctx.message.author.id)
+                    settings.part.remove(civ1.capitalize())
+                    settings.part.remove(civ2.capitalize())
+                    emb = discord.Embed(
+                        title=ctx.message.author.name +
+                        ', Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ РІ РёРіСЂСѓ! ' +
+                        civ1.capitalize() +
+                        ' ' +
+                        civ2.capitalize() +
+                        ' РСЃРєР»СЋС‡РµРЅС‹ РёР· РІС‹Р±РѕСЂРєРё',
+                        color=0x00ffff)
+                    settings.banned.append(civ1)
+                    settings.banned.append(civ2)
+                    banned_str = ""
+                    for ban in settings.banned:
+                        banned_str += ban + " "
+                    emb.set_footer(
+                        text='РЈР¶Рµ Р·Р°Р±Р°РЅРµРЅС‹: ' +
+                        banned_str.capitalize())
         else:
-            emb = discord.Embed(title="Ошибка!", color=0xff0000)
+            emb = discord.Embed(title="РћС€РёР±РєР°!", color=0xff0000)
             emb.add_field(
-                name="Имя:",
+                name="РРјСЏ:",
                 value=ctx.message.author.name,
                 inline=True)
-            emb.set_footer(text="Простите, но вы уже в игре. :(")
+            emb.set_footer(text="РџСЂРѕСЃС‚РёС‚Рµ, РЅРѕ РІС‹ СѓР¶Рµ РІ РёРіСЂРµ. :(")
     else:
-        emb = discord.Embed(title='Ошибка!', color=0xff0000)
-        emb.add_field(name=civ1 + " " + civ2, value='Этих наций нет в списке')
+        emb = discord.Embed(title='РћС€РёР±РєР°!', color=0xff0000)
+        emb.add_field(name=civ1 + " " + civ2, value='РљР°РєРѕР№-С‚Рѕ РёР· СЌС‚РёС… РЅР°С†РёР№ РЅРµС‚ РІ СЃРїРёСЃРєРµ')
         emb.set_footer(text=' ')
     await ctx.send(embed=emb)
 
@@ -59,7 +77,7 @@ async def ban(ctx, civ1, civ2):
 @Bot.command(pass_context=True)
 async def random(ctx):
     playersdictionary = GameAlgs.randomciv(settings.players, settings.part)
-    emb = discord.Embed(title='Старт', color=0x00ff00)
+    emb = discord.Embed(title='РЎС‚Р°СЂС‚', color=0x00ff00)
     for player in playersdictionary.keys():
         civ_str = ""
         for civ in playersdictionary[player]:
@@ -67,17 +85,14 @@ async def random(ctx):
         emb.add_field(name=player, value=civ_str, inline=True)
         civ_str = ""
     emb.set_footer(
-        text=f'Старт успешен.')
+        text=f'РЎС‚Р°СЂС‚ СѓСЃРїРµС€РµРЅ.')
     settings.players.clear()
-    settings.civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия',
-                       'Ацтеки', 'Бразилия', 'Вавилон',
-                       'Византия', 'Германия', 'Голландия', 'Греция',
-                       'Дания', 'Египет', 'Зулусы', 'Индия', 'Индонезия',
-                       'Инки', 'Ирокезы', 'Карфаген', 'Кельты', 'Китай',
-                       'Корея', 'Майя', 'Марокко', 'Монголия', 'Персия',
-                       'Полинезия', 'Польша', 'Португалия', 'Рим',
-                       'Россия', 'Сиам', 'Сонгай', 'Турция', 'Франция',
-                       'Швеция', 'Шошоны', 'Эфиопия', 'Япония']
+    settings.civils = ['РђРІСЃС‚СЂРёСЏ', 'РђРјРµСЂРёРєР°', 'РђРЅРіР»РёСЏ', 'РђСЂР°РІРёСЏ', 'РђСЃСЃРёСЂРёСЏ', 'РђС†С‚РµРєРё', 'Р‘СЂР°Р·РёР»РёСЏ', 'Р’Р°РІРёР»РѕРЅ',
+              'Р’РёР·Р°РЅС‚РёСЏ', 'Р“РµСЂРјР°РЅРёСЏ', 'Р“РѕР»Р»Р°РЅРґРёСЏ', 'Р“СЂРµС†РёСЏ', 'Р”Р°РЅРёСЏ', 'Р•РіРёРїРµС‚', 'Р—СѓР»СѓСЃС‹', 'РРЅРґРёСЏ',
+              'РРЅРґРѕРЅРµР·РёСЏ', 'РРЅРєРё', 'РСЂРѕРєРµР·С‹', 'РљР°СЂС„Р°РіРµРЅ', 'РљРµР»СЊС‚С‹', 'РљРёС‚Р°Р№', 'РљРѕСЂРµСЏ', 'РњР°Р№СЏ',
+              'РњР°СЂРѕРєРєРѕ', 'РњРѕРЅРіРѕР»РёСЏ', 'РџРµСЂСЃРёСЏ', 'РџРѕР»РёРЅРµР·РёСЏ', 'РџРѕР»СЊС€Р°', 'РџРѕСЂС‚СѓРіР°Р»РёСЏ', 'Р РёРј',
+              'Р РѕСЃСЃРёСЏ', 'РЎРёР°Рј', 'РЎРѕРЅРіР°Р№', 'РўСѓСЂС†РёСЏ', 'Р¤СЂР°РЅС†РёСЏ', 'РЁРІРµС†РёСЏ', 'РЁРѕС€РѕРЅС‹', 'Р­С„РёРѕРїРёСЏ',
+              'РЇРїРѕРЅРёСЏ']
     settings.part.clear()
     settings.part.extend(settings.civils)
     settings.partban.clear()
@@ -86,17 +101,51 @@ async def random(ctx):
 
 
 @Bot.command(pass_context=True)
+async def remake(ctx, match_id):
+    match = Mongocon.Match(match_id)
+    user = Mongocon.User(ctx.message.author.id, ctx.message.author.name, ctx.message.author.avatar)
+    ans = Mongocon.remake(user, match, match_id)
+    if ans:
+        settings.players.clear()
+        settings.civils = ['РђРІСЃС‚СЂРёСЏ', 'РђРјРµСЂРёРєР°', 'РђРЅРіР»РёСЏ', 'РђСЂР°РІРёСЏ', 'РђСЃСЃРёСЂРёСЏ', 'РђС†С‚РµРєРё', 'Р‘СЂР°Р·РёР»РёСЏ', 'Р’Р°РІРёР»РѕРЅ',
+                'Р’РёР·Р°РЅС‚РёСЏ', 'Р“РµСЂРјР°РЅРёСЏ', 'Р“РѕР»Р»Р°РЅРґРёСЏ', 'Р“СЂРµС†РёСЏ', 'Р”Р°РЅРёСЏ', 'Р•РіРёРїРµС‚', 'Р—СѓР»СѓСЃС‹', 'РРЅРґРёСЏ',
+                'РРЅРґРѕРЅРµР·РёСЏ', 'РРЅРєРё', 'РСЂРѕРєРµР·С‹', 'РљР°СЂС„Р°РіРµРЅ', 'РљРµР»СЊС‚С‹', 'РљРёС‚Р°Р№', 'РљРѕСЂРµСЏ', 'РњР°Р№СЏ',
+                'РњР°СЂРѕРєРєРѕ', 'РњРѕРЅРіРѕР»РёСЏ', 'РџРµСЂСЃРёСЏ', 'РџРѕР»РёРЅРµР·РёСЏ', 'РџРѕР»СЊС€Р°', 'РџРѕСЂС‚СѓРіР°Р»РёСЏ', 'Р РёРј',
+                'Р РѕСЃСЃРёСЏ', 'РЎРёР°Рј', 'РЎРѕРЅРіР°Р№', 'РўСѓСЂС†РёСЏ', 'Р¤СЂР°РЅС†РёСЏ', 'РЁРІРµС†РёСЏ', 'РЁРѕС€РѕРЅС‹', 'Р­С„РёРѕРїРёСЏ',
+                'РЇРїРѕРЅРёСЏ']
+        settings.part.clear()
+        settings.part.extend(settings.civils)
+        settings.partban.clear()
+        settings.banned.clear()
+        emb = discord.Embed(title='РџРµСЂРµСЃРѕР·РґР°РЅРёРµ', color=0x00ff00)
+        emb.set_footer(text="Р’С‹ РјРѕР¶РµС‚Рµ Р·Р°РЅРѕРІРѕ СЃРѕР·РґР°С‚СЊ РјР°С‚С‡!")
+    else:
+        emb = discord.Embed(title='РџРµСЂРµСЃРѕР·РґР°РЅРёРµ', color=0xff0000)
+        emb.set_footer(text="Р’С‹ РЅРµ С…РѕСЃС‚ СЌС‚РѕРіРѕ РјР°С‚С‡Р° РёР»Рё РѕРЅ РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚!")
+    await ctx.send(embed=emb)
+
+
+@Bot.command(pass_context=True)
+async def result(ctx, match_id, *args):
+    match = Mongocon.Match(match_id)
+    user = Mongocon.User(ctx.message.author.id, ctx.message.author.name, ctx.message.author.avatar)
+
+
+
+
+
+@Bot.command(pass_context=True)
 async def help(ctx):
     emb = discord.Embed(title='Commands', color=0x00ffff)
     emb.add_field(
-        name='!ban Нация1 Нация2',
-        value='Регистрирует участника и банит две нации из выборки.',
+        name='!ban РќР°С†РёСЏ1 РќР°С†РёСЏ2',
+        value='Р‘Р°РЅРёС‚ РґРІРµ С†РёРІРёР»РёР·Р°С†РёРё Рё СЂРµРіРёСЃС‚СЂРёСЂСѓРµС‚ РІР°СЃ РІ РёРіСЂСѓ.',
         inline=False)
     emb.add_field(
         name='!random',
-        value='Случайным образом выбирает каждому участнику три нации',
+        value='Р’С‹РґР°С‘С‚ С‚СЂРё СЂР°РЅРґРѕРјРЅС‹Рµ РЅР°С†РёРё!',
         inline=False)
-    emb.set_footer(text='Уже исключены Гунны, Венеция, Испания.')
+    emb.set_footer(text='')
     await ctx.send(embed=emb)
 
-Bot.run("NTc2NDA3NjA2ODU2MjUzNDQw.Xg9E2g.mwyRVMohKYvixtE7mdUgfiDaRTc")
+Bot.run("NjQyNDQ0MzY4NTgxNzU0ODgw.XlpKEw.8FGEfin-R7LgNpBq4GvegoRq8Mo")
