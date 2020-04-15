@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 import random
 
 
-client = MongoClient('mongodb+srv://PyScr:Sorodich666@civbotdatabase-ltzn0.azure.mongodb.net/test?retryWrites=true&w=majority')
+client = MongoClient('mongodb://DataUser:Sorodich666@ds211099.mlab.com:11099/heroku_w4jzwn4c')
 db = client.CivBot
 
 
