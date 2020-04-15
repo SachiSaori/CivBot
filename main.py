@@ -38,7 +38,7 @@ async def ban(ctx, match_id, civ1, civ2):
                         name="id:",
                         value=match_id,
                         inline=True)
-                    emb.set_footer(text="Матч с этим id уже есть.")
+                    emb.set_footer(text="Матч с этим id уже начат.")
                 else:
                     settings.players.append(ctx.message.author.name)
                     settings.users_id.append(ctx.message.author.id)
@@ -75,9 +75,11 @@ async def ban(ctx, match_id, civ1, civ2):
 
 
 @Bot.command(pass_context=True)
-async def random(ctx):
+async def random(ctx, match_id):
     playersdictionary = GameAlgs.randomciv(settings.players, settings.part)
     emb = discord.Embed(title='Старт', color=0x00ff00)
+    match = Mongocon.Match(match_id)
+    host, avg_point = match.start(int(match_id))
     for player in playersdictionary.keys():
         civ_str = ""
         for civ in playersdictionary[player]:
@@ -85,7 +87,7 @@ async def random(ctx):
         emb.add_field(name=player, value=civ_str, inline=True)
         civ_str = ""
     emb.set_footer(
-        text=f'Старт успешен.')
+        text=f'Старт успешен. Средний рейтинг участников равен {avg_point}, хостом игры является {host}. ХОСТ ОБЯЗАН ПРЕДОСТАВИТЬ СТАТИСТИКУ ПОСЛЕ ИГРЫ!')
     settings.players.clear()
     settings.civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
               'Византия', 'Германия', 'Голландия', 'Греция', 'Дания', 'Египет', 'Зулусы', 'Индия',
@@ -104,7 +106,7 @@ async def random(ctx):
 async def remake(ctx, match_id):
     match = Mongocon.Match(match_id)
     user = Mongocon.User(ctx.message.author.id, ctx.message.author.name, ctx.message.author.avatar)
-    ans = Mongocon.remake(user, match, match_id)
+    ans = match.remake(user, match_id)
     if ans:
         settings.players.clear()
         settings.civils = ['Австрия', 'Америка', 'Англия', 'Аравия', 'Ассирия', 'Ацтеки', 'Бразилия', 'Вавилон',
@@ -127,25 +129,61 @@ async def remake(ctx, match_id):
 
 @Bot.command(pass_context=True)
 async def result(ctx, match_id, *args):
+    mention_list: List[Any] = []
     match = Mongocon.Match(match_id)
+    for mention in ctx.message.mentions:
+        mention_list.append(mention.id)
     user = Mongocon.User(ctx.message.author.id, ctx.message.author.name, ctx.message.author.avatar)
+    ans = match.result(user, int(match_id), mention_list)
+    if ans:
+        await ctx.send("Статистика обновлена!")
+    else:
+        await ctx.send("Вы не хост!")
 
-
-
-
+@Bot.command(pss_context=True)
+async def stat(ctx, mention=None):
+    if len(ctx.message.mentions) == 0:
+        user = Mongocon.User(ctx.message.author.id, ctx.message.author.name, ctx.message.author.avatar)
+    else:
+        mention = ctx.message.mentions[0]
+        user = Mongocon.User(mention.id, mention.name, mention.avatar)
+    statistic = user.statistic()
+    emb = discord.Embed(title=statistic["name"], color=0x00ff00)
+    emb.add_field(name = 'Всего игр: ', value=statistic["matches"], inline=False)
+    emb.add_field(name = 'Из них побед: ', value=statistic["wins"], inline=True)
+    emb.add_field(name = 'Из них поражений: ', value=statistic["loses"], inline=True)
+    emb.add_field(name = 'Из них "выживаний": ', value=statistic["survives"], inline=True)
+    emb.add_field(name = 'Ваш рейтинг: ', value=statistic["points"], inline=False)
+    await ctx.send(embed=emb)
+ 
 
 @Bot.command(pass_context=True)
 async def help(ctx):
     emb = discord.Embed(title='Commands', color=0x00ffff)
     emb.add_field(
-        name='!ban Нация1 Нация2',
+        name='!ban id Нация1 Нация2',
         value='Банит две цивилизации и регистрирует вас в игру.',
         inline=False)
     emb.add_field(
-        name='!random',
+        name='!random id',
         value='Выдаёт три рандомные нации!',
         inline=False)
+    emb.add_field(
+        name='!result id Победитель Проигравшие(Может отсутствовать!)',
+        value='Обновляет рейтинг всех игроков, участвовавших в матче. Доступна только хосту!',
+        inline=False,
+    )
+    emb.add_field(
+        name='!remake id',
+        value='Пересоздаёт игру с данным id. Доступна только хосту!',
+        inline=False,
+    )
+    emb,add_field(
+        name='!stat игрок(упоминанием)',
+        value='Выводит статистику УПОМЯНУТОГО игрока. Если упоминания не было - выводит вашу статистику.',
+        inline=False
+    )
     emb.set_footer(text='')
     await ctx.send(embed=emb)
 
-Bot.run("NjQyNDQ0MzY4NTgxNzU0ODgw.XlpKEw.8FGEfin-R7LgNpBq4GvegoRq8Mo")
+Bot.run("NTc2NDA3NjA2ODU2MjUzNDQw.XpbcIQ.lO3XJ2va8zGIR_n89ovxu2zlieM")

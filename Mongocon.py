@@ -1,5 +1,4 @@
 from pymongo import MongoClient
-from pprint import pprint
 from typing import List, Dict, Any
 import random
 
@@ -10,7 +9,7 @@ db = client.CivBot
 
 
 class User:
-    def __init__(self, discordId: str, name: str, avatar_url: str) -> None:
+    def __init__(self, discordId: int, name: str, avatar_url: str) -> None:
         self.id = discordId
         self.name = name
         self.url = avatar_url
@@ -21,19 +20,16 @@ class User:
         else:
             self.ingame = self.coll.find_one({"id": self.id})["in_game"]
 
-    def __str__(self) -> str:
-        return f"I'm {self.name}, My id is {self.id}, I'm in game: {self.ingame}" #Это мне надо для тестов!
-
     def create(self) -> None:
         user: Dict[str, Any] = {
-            "id": str(self.id),
+            "id": self.id,
             "name": self.name,
             "matches": 0,
             "wins": 0,
             "loses": 0,
             "survives": 0,
             "avatar_URL": self.url,
-            "points": 0,
+            "points": 1200,
             "in_game": False,
         } #Шаблон пользователя в базе данных.
 
@@ -61,8 +57,8 @@ class User:
             "in_game": mediator["in_game"],
         }
         return stat #Статистика игрока. В виде словаря, да
-    
-    
+
+
 
 
 class Match:
@@ -85,9 +81,6 @@ class Match:
             "host": "",
             "avg_rating": 0,
             "status": False,
-            "winer": "",
-            "looser": [],
-            "survival": [],
         }
 
         if self.not_exist_check(match_id):
@@ -102,51 +95,56 @@ class Match:
         else: #Иначе проверяем матч на то, существует он или нет!
             if self.not_exist_check(match_id):
                 self.create(match_id) #Если не существует - создаём и добавляем игрока в список играющих!
-                self.players.append(player.id)
+                self.coll.update_one({"id": match_id}, {"$addToSet": {"players": player.id}})
                 return True
             else: #Если существует, мы проверяем его статус.
-                if self.coll.find_one({"id": match_id})["status"] == False:
-                    self.players.append(player.id) #Если регистрация открыта - пускаем игрока
+                if self.coll.find_one({"id": match_id})["status"] == False: #Если регистрация открыта - пускаем игрока
+                    self.coll.update_one({"id": match_id}, {"$addToSet": {"players": player.id}})
                     return True
                 else: #А иначе он идёт нахуй!
                     return False
 
-    def start(self, match_id: int) -> List[str]:
-        host: List[str] = []
-        self.coll.update({"id": match_id}, {"$addToSet": {"players": {"$each": self.players}}})
+    def start(self, match_id: int,) -> str:
+        point_sum: int = 0
         self.coll.update({"id": match_id}, {"$set": {"status": True}})
-        if "371291041640218647" in self.players:
-            host.append("371291041640218647")
+        if 371291041640218647 in self.coll.find_one({"id": match_id})["players"]:
+            host = 371291041640218647
         else:
-            host.append(random.choice(self.players))
-        self.coll.update({"id": match_id}, {"$addToSet": {"hosts": {"$each": hosts}}})
-        return host
+            host = random.choice(self.coll.find_one({"id": match_id})["players"])
+        self.coll.update({"id": match_id}, {"$set": {"host": host}})
+        for user in self.coll.find_one({"id": match_id})["players"]:
+            point_sum += db.Users.find_one({"id": user})["points"]
+        avg_point = point_sum/len(self.coll.find_one({"id": match_id})["players"])
+        self.coll.update({"id": match_id}, {"$set": {"avg_rating": avg_point}})
+        str_host = db.Users.find_one({"id": host})["name"]
+        return str_host, avg_point
 
     def remake(self, player: User, match_id: int) -> bool:
         if player.id == self.coll.find_one({"id": match_id})["host"]:
-            for user in self.coll.find_one({"id": match_id}):
+            for user in self.coll.find_one({"id": match_id})["players"]:
                 db.Users.update({"id": user}, {"$set": {"in_game": False}})
             self.coll.delete_one({"id": match_id})
             return True
         else:
             return False
 
-    def result(self, player: User, match_id: int, *args) -> bool:
-        if player.id == self.coll.find_one({"id": match_id})["host"]:
-            for arg in enumerate(args):
-                usr = db.Users.find_one({"name": arg[1]})["id"]
+    def result(self, player: User, match_id: int, mention_list: List[Any]) -> bool:
+        host = self.coll.find_one({"id": match_id})["host"]
+        avg_point = self.coll.find_one({"id": match_id})["avg_rating"]
+        if player.id == host:
+            for arg in enumerate(mention_list):
                 if arg[0] == 0:
-                    self.coll.update({"id": match_id}, {"$pull": {"players": usr}})
-                    self.coll.update({"id": match_id}, {"$set": {"winer": usr}})
-                    db.Users.update({"id": usr}, {"$inc": {{"wins": 1}, {"matches": 1}, {"points": self.coll.find_one({"id": match_id})["avg_rating"]*0.25}}})
+                    db.Users.update({"id": arg[1]}, {"$inc": {"wins": 1, "matches": 1, "points": avg_point*0.25}})
+                    db.Users.update({"id": arg[1]}, {"$set": {"in_game": False}})
+                    self.coll.update({"id": match_id}, {"$pull": {"players": arg[1]}})
                 else:
-                    db.Users.update({"id": usr}, {"$inc": {{"loses": 1}, {"matches": 1}, {"points": -self.coll.find_one({"id": match_id})["avg_rating"]*0.1}}})
-                    self.coll.update({"id": match_id}, {"$pull": {"players": usr}})
-                    self.coll.update({"id": match_id}, {"$addToSet": {"looser": usr}})
+                    db.Users.update({"id": arg[1]}, {"$inc": {"loses": 1, "matches": 1, "points": -avg_point*0.1}})
+                    db.Users.update({"id": arg[1]}, {"$set": {"in_game": False}})
+                    self.coll.update({"id": match_id}, {"$pull": {"players": arg[1]}})
             for user in self.coll.find_one({"id": match_id})["players"]:
-                self.coll.update({"id": match_id}, {"$pull": {"players": user}})
-                self.coll.update({"id": match_id}, {"$addToSet": {"survival": user}})
-                db.Users.update({"id": usr}, {"$inc": {{"survives": 1}, {"matches": 1}, {"points": self.coll.find_one({"id": match_id})["avg_rating"]*0.15}}})
+                db.Users.update({"id": user}, {"$inc": {"survives": 1, "matches": 1, "points": avg_point*0.15}})
+                db.Users.update({"id": user}, {"$set": {"in_game": False}})
+            self.coll.delete_one({"id": match_id})
             return True
         else:
             return False
@@ -166,13 +164,3 @@ def join(player: User, match: Match, match_id: str) -> str:
         else:
             return "Добро пожаловать!"
 
-def remake(player: User, match: Match, match_id: str) -> bool:
-    if match.remake(player, int(match_id)):
-        match.remake(player, int(match_id))
-        return True
-    else:
-        return False
-
-
-print(user.statistic())
-#TODO: results from match, write mediator of two functions
