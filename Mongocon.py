@@ -4,7 +4,7 @@ import random
 
 
 client = MongoClient('mongodb://DataUser:Sorodich666@ds211099.mlab.com:11099/heroku_w4jzwn4c')
-db = client.CivBot
+db = client.heroku_w4jzwn4c
 
 
 
