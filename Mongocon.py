@@ -81,7 +81,7 @@ class Match:
             "host": "",
             "avg_rating": 0,
             "status": False,
-        }
+        } #Шаблон Матча в базе данных
 
         if self.not_exist_check(match_id):
             self.coll.insert_one(match)
@@ -108,15 +108,15 @@ class Match:
         point_sum: int = 0
         self.coll.update({"id": match_id}, {"$set": {"status": True}})
         if 371291041640218647 in self.coll.find_one({"id": match_id})["players"]:
-            host = 371291041640218647
+            host = 371291041640218647 #Если в данном матче есть доверенное лицо, делаем его хостом!
         else:
-            host = random.choice(self.coll.find_one({"id": match_id})["players"])
+            host = random.choice(self.coll.find_one({"id": match_id})["players"]) #Или выбираем хоста рандомно
         self.coll.update({"id": match_id}, {"$set": {"host": host}})
         for user in self.coll.find_one({"id": match_id})["players"]:
             point_sum += db.Users.find_one({"id": user})["points"]
-        avg_point = point_sum/len(self.coll.find_one({"id": match_id})["players"])
+        avg_point = point_sum/len(self.coll.find_one({"id": match_id})["players"]) #Средний рейтинг игроков
         self.coll.update({"id": match_id}, {"$set": {"avg_rating": avg_point}})
-        str_host = db.Users.find_one({"id": host})["name"]
+        str_host = db.Users.find_one({"id": host})["name"] #никнейм хоста
         return str_host, avg_point
 
     def remake(self, player: User, match_id: int) -> bool:
@@ -131,17 +131,17 @@ class Match:
     def result(self, player: User, match_id: int, mention_list: List[Any]) -> bool:
         host = self.coll.find_one({"id": match_id})["host"]
         avg_point = self.coll.find_one({"id": match_id})["avg_rating"]
-        if player.id == host:
-            for arg in enumerate(mention_list):
-                if arg[0] == 0:
+        if player.id == host: #Статистику отдаёт хост
+            for arg in enumerate(mention_list): #Тактика следующая, всегда есть победитель. Проигравших может не быть
+                if arg[0] == 0: #Победитель всегда передаётся первым среди всех аргументов
                     db.Users.update({"id": arg[1]}, {"$inc": {"wins": 1, "matches": 1, "points": avg_point*0.25}})
                     db.Users.update({"id": arg[1]}, {"$set": {"in_game": False}})
                     self.coll.update({"id": match_id}, {"$pull": {"players": arg[1]}})
-                else:
+                else: #После - идут проигравшие. Их может быть несколько
                     db.Users.update({"id": arg[1]}, {"$inc": {"loses": 1, "matches": 1, "points": -avg_point*0.1}})
                     db.Users.update({"id": arg[1]}, {"$set": {"in_game": False}})
                     self.coll.update({"id": match_id}, {"$pull": {"players": arg[1]}})
-            for user in self.coll.find_one({"id": match_id})["players"]:
+            for user in self.coll.find_one({"id": match_id})["players"]: #Остальные игроки, по которым не передали статистику считаются выжившими.
                 db.Users.update({"id": user}, {"$inc": {"survives": 1, "matches": 1, "points": avg_point*0.15}})
                 db.Users.update({"id": user}, {"$set": {"in_game": False}})
             self.coll.delete_one({"id": match_id})
