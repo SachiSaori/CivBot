@@ -11,3 +11,6 @@ part.extend(civils)
 partban = []
 banned = []
 users_id = []
+
+DB_KEY = "mongodb://DataUser:Sorodich666@ds211099.mlab.com:11099/heroku_w4jzwn4c"
+BOT_TOKEN = "NTc2NDA3NjA2ODU2MjUzNDQw.XrQtOw.yn00ywOVIBBvgriBKyqoglwTYG8"

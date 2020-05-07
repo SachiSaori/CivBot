@@ -76,7 +76,7 @@ async def ban(ctx, match_id, civ1, civ2):
 
 @Bot.command(pass_context=True)
 async def random(ctx, match_id):
-    playersdictionary = GameAlgs.randomciv(settings.players, settings.part)
+    playersdictionary = GameAlgs.randomciv()
     emb = discord.Embed(title='Старт', color=0x00ff00)
     match = Mongocon.Match(match_id)
     host, avg_point = match.start(int(match_id))
@@ -186,4 +186,4 @@ async def help(ctx):
     emb.set_footer(text='')
     await ctx.send(embed=emb)
 
-Bot.run("NTc2NDA3NjA2ODU2MjUzNDQw.XpbcIQ.lO3XJ2va8zGIR_n89ovxu2zlieM")
+Bot.run(setting.BOT_TOKEN)
