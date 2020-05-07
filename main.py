@@ -186,4 +186,4 @@ async def help(ctx):
     emb.set_footer(text='')
     await ctx.send(embed=emb)
 
-Bot.run(setting.BOT_TOKEN)
+Bot.run(settings.BOT_TOKEN)
